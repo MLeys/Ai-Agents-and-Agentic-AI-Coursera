@@ -1,0 +1,66 @@
+!pip install litellm
+
+import os
+from google.colab import userdata
+import litellm
+
+# Get your API key from secrets
+api_key = userdata.get('OPENAI_API_KEY')
+os.environ['OPENAI_API_KEY'] = api_key
+
+print("API key loaded successfully!")
+
+from litellm import completion
+from typing import List, Dict
+import re
+
+def generate_response(messages: List[Dict]) -> str:
+    """Call LLM to get response"""
+    response = completion(
+        model="openai/gpt-4o-mini",
+        messages=messages,
+        max_tokens=1024
+    )
+    return response.choices[0].message.content
+
+what_function = input("What Python function do you want me to create? ")
+
+print("=== STEP 1: Generating Basic Function ===")
+messages = [
+    {"role": "system", "content": "You are an expert Python programmer. Write clean, efficient functions based on user descriptions. Return only the function code."},
+    {"role": "user", "content": f"Write a Python function for: {what_function}"}
+]
+
+response1 = generate_response(messages)
+print("LLM Response1:")
+print(response1)
+print()
+
+print("=== STEP 2: Adding Documentation ===")
+print("Goal: Add comprehensive docstrings and parameter descriptions")
+
+messages.extend([
+    {"role": "assistant", "content": response1},
+    {"role": "user", "content": "Add comprehensive documentation to this function including: function description, parameter descriptions with types, return value description, example usage, and edge cases. Return the complete documented function."}
+    ])
+
+response2 = generate_response(messages)
+print("LLM Response2:")
+print(response2)
+print()
+
+print("=== STEP 3: Adding Test Cases ===")
+print("Goal: Add comprehensive unittest test cases")
+
+messages.extend([
+    {"role": "assistant", "content": response2},
+    {"role": "user", "content": "Add comprehensive unittest test cases to this  code. Include tests for: basic functionality, edge cases, error cases, and various input scenarios. Return the complete code with the function, imports, test class, and main block to run tests."}
+    ])
+
+response3 = generate_response(messages)
+print("LLM Response3:")
+print(response3)
+print()
+print("*****************************")
+print('---Messages Final---')
+print(messages)
